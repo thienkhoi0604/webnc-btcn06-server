@@ -19,8 +19,12 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-db.presentations = require("./presentations.model.js")(sequelize, Sequelize);
-db.slides = require("./slides.model.js")(sequelize, Sequelize);
-db.options = require("./options.model.js")(sequelize, Sequelize);
+db.presentations = require("./presentations/presentations.model.js")(
+  sequelize,
+  Sequelize
+);
+db.slides = require("./presentations/slides.model.js")(sequelize, Sequelize);
+db.options = require("./presentations/options.model.js")(sequelize, Sequelize);
+db.accounts = require("./users/accounts.model.js")(sequelize, Sequelize);
 
 module.exports = db;

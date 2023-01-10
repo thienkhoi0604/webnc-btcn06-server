@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 const Slide = db.slides;
 const Option = db.options;
 const Op = db.Sequelize.Op;

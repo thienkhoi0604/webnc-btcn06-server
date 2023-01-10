@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const slideCtrl = require("../controllers/slide.controller.js");
+const slideCtrl = require("../../controllers/presentations/slide.controller.js");
 
 router.get("/", slideCtrl.findAll);
 router.get("/:idPresentation", slideCtrl.findOneByPresentation);
