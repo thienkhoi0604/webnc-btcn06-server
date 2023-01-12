@@ -1,10 +1,16 @@
 const db = require("../../models");
 const Account = db.accounts;
+const MemberGroup = db.memberGroups;
 const Op = db.Sequelize.Op;
+const fetch = require("node-fetch");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const sendMail = require("./sendMail.js");
+
+const { google } = require("googleapis");
+const { OAuth2 } = google.auth;
+const client = new OAuth2(process.env.MAILING_SERVICE_CLIENT_ID);
 
 const { CLIENT_URL } = process.env;
 
@@ -88,10 +94,11 @@ const userCtrl = {
 
       const refresh_token = createRefreshToken({ id: user.id });
       res.cookie("refreshtoken", refresh_token, {
-        httpOnly: true,
         path: "/user/refresh_token",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
+      console.log("refres", refresh_token);
+      console.log("cookie", res.cookie);
 
       res.json({ msg: "Login success!" });
     } catch (err) {
@@ -117,6 +124,119 @@ const userCtrl = {
         const access_token = createAccessToken({ id: user.id });
         res.json({ access_token });
       });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  getUserInfor: async (req, res) => {
+    try {
+      const user = await Account.findOne({
+        attributes: ["email", "fullname"],
+        where: { email: req.query.email },
+      });
+
+      res.json(user);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  getMemberInGroup: async (req, res) => {
+    try {
+      const email = req.params.email;
+      const result = await Account.findAll({
+        include: {
+          model: MemberGroup,
+          as: "members",
+          where: { email: email },
+        },
+      });
+      res.json(result);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  getAllUsers: async (req, res) => {
+    try {
+      await Account.findAll().then((result) => {
+        res.json(result);
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  googleLogin: async (req, res, db) => {
+    try {
+      const { tokenId } = req.body;
+
+      const verify = await client.verifyIdToken({
+        idToken: tokenId,
+        audience: process.env.MAILING_SERVICE_CLIENT_ID,
+      });
+
+      const { email_verified, email, name, picture } = verify.payload;
+
+      const password = email + process.env.GOOGLE_SECRET;
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      if (!email_verified)
+        return res.status(400).json({ msg: "Email verification failed." });
+
+      const user = await Account.findOne({
+        where: { email: email },
+      });
+      console.log(user);
+      if (user) {
+        return res.status(200).json({ msg: "Login success!", user: email });
+      }
+
+      const newUser = {
+        name,
+        email,
+        password: passwordHash,
+        telephone: "",
+      };
+      await Account.create(newUser);
+      return res
+        .status(200)
+        .json({ msg: { mess: "Login success!", item }, user: email });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  facebookLogin: async (req, res, db) => {
+    try {
+      const { accessToken, userID } = req.body;
+      console.log("accessToken", accessToken);
+
+      const URL = `https://graph.facebook.com/v2.9/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`;
+
+      const data = await fetch(URL)
+        .then((res) => res.json())
+        .then((res) => {
+          return res;
+        });
+      const { email, name, picture } = data;
+      console.log("data", data);
+      const password = email + process.env.FACEBOOK_SECRET;
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      const user = Account.findOne({
+        where: { email: email },
+      });
+      if (user) {
+        return res.status(200).json({ msg: "Login success!", user: email });
+      }
+
+      const newUser = {
+        fullname: name,
+        email,
+        password: passwordHash,
+        telephone: "",
+      };
+      await Account.create({ newUser });
+      return res.status(200).json({ msg: "Login success!", user: email });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }

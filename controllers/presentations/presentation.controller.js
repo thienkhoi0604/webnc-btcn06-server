@@ -1,20 +1,31 @@
 const db = require("../../models");
 const Presentation = db.presentations;
+const Account = db.accounts;
 const Op = db.Sequelize.Op;
 
 const presentationCtrl = {
-  findAll: (req, res) => {
-    Presentation.findAll()
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(500).send({
-          message:
-            err.message ||
-            "Some error occurred while retrieving presentations.",
-        });
+  findAll: async (req, res) => {
+    try {
+      const email = req.query.email;
+      const user = await Account.findOne({
+        where: { email: email },
       });
+
+      if (!user) {
+        return res.status(400).json({ msg: "Email doesn't exists" });
+      }
+
+      const presentations = await Presentation.findAll({
+        where: { owner_pre: user.dataValues.id },
+      });
+      if (presentations) {
+        presentations.fullname = user.dataValues.fullname;
+      }
+
+      res.status(200).json(presentations);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
   },
 
   findOne: (req, res) => {
@@ -37,34 +48,35 @@ const presentationCtrl = {
       });
   },
 
-  create: (req, res) => {
-    if (!req.body.name_pre) {
-      res.status(400).send({
-        message: "Content can not be empty!",
-      });
-      return;
-    }
-
-    // Create a Tutorial
-    const presentation = {
-      name_pre: req.body.name_pre,
-      owner_pre: req.body.owner,
-      modified: req.body.modified ? req.body.modified : "modifying",
-      created: "modifying",
-    };
-
-    // Save Tutorial in the database
-    Presentation.create(presentation)
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(500).send({
-          message:
-            err.message ||
-            "Some error occurred while creating the Presentation.",
+  create: async (req, res) => {
+    try {
+      const { email, name_pre } = req.body;
+      if (!name_pre) {
+        return res.status(400).send({
+          msg: "Content can not be empty!",
         });
+      }
+
+      const user = await Account.findOne({
+        where: { email: email },
       });
+      if (!user) {
+        return res.status(400).send({
+          msg: "Email doesn't exists!",
+        });
+      }
+
+      const newPresentation = {
+        name_pre: name_pre,
+        owner_pre: user.dataValues.id,
+        modified: "modifying",
+        created: "modifying",
+      };
+      await Presentation.create(newPresentation);
+      res.json({ msg: "Presentation has been created!" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
   },
 };
 

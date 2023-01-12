@@ -19,6 +19,7 @@ const slideCtrl = {
 
   findOneByPresentation: (req, res) => {
     const idPresentation = req.params.idPresentation;
+    console.log(idPresentation);
     var condition = idPresentation
       ? { id_presentation: { [Op.like]: `%${idPresentation}%` } }
       : null;

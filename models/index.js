@@ -26,5 +26,30 @@ db.presentations = require("./presentations/presentations.model.js")(
 db.slides = require("./presentations/slides.model.js")(sequelize, Sequelize);
 db.options = require("./presentations/options.model.js")(sequelize, Sequelize);
 db.accounts = require("./users/accounts.model.js")(sequelize, Sequelize);
+db.groupUsers = require("./users/group-users.model.js")(sequelize, Sequelize);
+db.memberGroups = require("./users/member-groups.model.js")(
+  sequelize,
+  Sequelize
+);
+
+db.accounts.hasMany(db.memberGroups, {
+  foreignKey: "member",
+  as: "members",
+});
+
+db.memberGroups.belongsTo(db.accounts, {
+  foreignKey: "member",
+  as: "account",
+});
+
+db.groupUsers.hasMany(db.memberGroups, {
+  foreignKey: "id_group",
+  as: "member_group",
+});
+
+db.memberGroups.belongsTo(db.groupUsers, {
+  foreignKey: "id_group",
+  as: "group",
+});
 
 module.exports = db;

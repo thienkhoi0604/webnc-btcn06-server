@@ -12,11 +12,28 @@ CREATE TABLE `ACCOUNTS`
     CONSTRAINT ACCOUNT_pkey PRIMARY KEY (id, email)
 );
 
+CREATE TABLE IF NOT EXISTS `GROUP_USERS`
+(
+	id INT NOT NULL AUTO_INCREMENT,
+	NAME char(50) NOT NULL,
+    CONSTRAINT GROUP_USER_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS `MEMBER_GROUPS`
+(
+	id_group integer NOT NULL,
+	member integer,
+	role char(10) NOT NULL,
+    CONSTRAINT MEMBER_GROUP_pkey PRIMARY KEY (id_group, member),
+	CONSTRAINT MEMBER_GROUP_fkey_gr FOREIGN KEY(id_group) REFERENCES `GROUP_USERS`(id),
+	CONSTRAINT MEMBER_GROUP_fkey_mem FOREIGN KEY(member) REFERENCES `ACCOUNTS`(id)
+);
+
 CREATE TABLE `PRESENTATIONS`
 (
 	id int NOT NULL AUTO_INCREMENT,
     name_pre varchar(50),
-    owner_pre varchar(50),
+    owner_pre int,
     modified varchar(20),
     created varchar(20),
     PRIMARY KEY(id)
@@ -41,6 +58,12 @@ CREATE TABLE `OPTIONS`
     value_option varchar(100),
     vote int,
     PRIMARY KEY(id_option, id_slide)
+);
+
+ALTER TABLE `PRESENTATIONS`
+ADD
+(
+	FOREIGN KEY(owner_pre) REFERENCES `ACCOUNTS`(id)
 );
 
 ALTER TABLE `SLIDES`
@@ -70,21 +93,52 @@ VALUES
 ('pkilmaster5@gmail.com', 'RGrcQdT', 'Pierre Kilmaster', '733-182-5526'),
 ('epointon6@gmail.com', 'NaIPIxOztkP', 'Ellette Pointon', '195-592-8966');
 
+
+INSERT INTO `GROUP_USERS`(name)
+VALUES
+('Topdrive'),
+('Thoughtworks'),
+('Thoughtbridge'),
+('Devpulse'),
+('Feedbug'),
+('JumpXS'),
+('Janyx'),
+('Skinte');
+
+INSERT INTO `MEMBER_GROUPS`(id_group, member, role)
+VALUES
+(1, 2, 'member'),
+(1, 9, 'member'),
+(1, 7, 'member'),
+(1, 3, 'owner'),
+(1, 5, 'co-owner'),
+(2, 2, 'owner'),
+(2, 6, 'member'),
+(2, 10,'member'),
+(2, 11, 'member'),
+(3, 8, 'member'),
+(3, 4, 'owner'),
+(3, 5, 'member'),
+(4, 6, 'owner'),
+(4, 7, 'member'),
+(5, 9, 'member'),
+(6, 11, 'owner');
+
 INSERT INTO `PRESENTATIONS`(name_pre, owner_pre, modified, created)
 VALUES
-('Stringtough', 'Tuckie Ede', '1 day ago', '1 week ago'),
-('Ventosanzap', 'Lucienne Quare', '2 days ago', '1 day ago'),
-('Mat Lam Tam', 'Sisely Saur', '1 day ago', '2 days ago'),
-('Andalax', 'Car Bullas', '1 week ago', '1 week ago'),
-('Vagram', 'Leroy Hartly', '3 days ago', '2 weeks ago'),
-('Konklux', 'Tuckie Ede', '5 days ago', '1 hour ago'),
-('Gembucket', 'Tuckie Ede', '1 day ago', '1 hour ago');
+('Stringtough', 1, '1 day ago', '1 week ago'),
+('Ventosanzap', 1, '2 days ago', '1 day ago'),
+('Mat Lam Tam', 2, '1 day ago', '2 days ago'),
+('Andalax', 2, '1 week ago', '1 week ago'),
+('Vagram', 2, '3 days ago', '2 weeks ago'),
+('Konklux', 3, '5 days ago', '1 hour ago'),
+('Gembucket', 3, '1 day ago', '1 hour ago');
 
 INSERT INTO `SLIDES`(id_presentation, slide_type, question, longer_description, image, result_layout)
 VALUES
-(1, 'Multiple Choice', 'Multiple Choice', null, null, 'bars'),
-(1, 'Multiple Choice', 'Multiple Choice', null, null, 'bars'),
-(1, 'Multiple Choice', 'Multiple Choice', null, null, 'bars');
+(3, 'Multiple Choice', 'Multiple Choice', null, null, 'bars'),
+(3, 'Multiple Choice', 'Multiple Choice', null, null, 'bars'),
+(3, 'Multiple Choice', 'Multiple Choice', null, null, 'bars');
 
 INSERT INTO `OPTIONS`(id_slide, value_option, vote)
 VALUES

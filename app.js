@@ -40,7 +40,8 @@ db.sequelize
 //Routes
 //User
 app.use("/user", require("./routes/users/user.router.js"));
-
+app.use("/group", require("./routes/users/member-groups.router.js"));
+app.use("/inforgroup", require("./routes/users/group-users.router"));
 //Presentations
 app.use(
   "/presentation",

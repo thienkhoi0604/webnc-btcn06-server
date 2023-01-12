@@ -1,23 +1,17 @@
 module.exports = (sequelize, Sequelize) => {
-  const Presentation = sequelize.define(
-    "presentations",
+  const MemberGroup = sequelize.define(
+    "member_groups",
     {
-      id: {
+      id_group: {
         type: Sequelize.INTEGER,
-        autoIncrement: true,
         allowNull: false,
         primaryKey: true,
       },
-      name_pre: {
-        type: Sequelize.STRING,
-      },
-      owner_pre: {
+      member: {
         type: Sequelize.INTEGER,
+        primaryKey: true,
       },
-      modified: {
-        type: Sequelize.STRING,
-      },
-      created: {
+      role: {
         type: Sequelize.STRING,
       },
     },
@@ -26,5 +20,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return Presentation;
+  return MemberGroup;
 };
